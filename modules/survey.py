@@ -162,6 +162,9 @@ class Survey_Collection(object):
             tablefoot_text += f"{key} : {value}, "
         tablefoot_text += "}"
 
+        if 'Hz' in self.common_spec_res.unit.to_string():
+            self.common_spec_res = func.convert_chan_freq_vel(self.common_spec_res)
+
         ascii.write(self.survey_table['survey', 'facility', 'coverage', 'targets', 'beam', 'rms', 'nhi_1e18',
                                       'redshifts', 'references'],
                     latex_table,
@@ -174,6 +177,6 @@ class Survey_Collection(object):
                                'data_end': "\hline",
                                'caption': f"HI surveys at common spectral resolution {self.common_spec_res}",
                                'tablefoot' : tablefoot_text,
-                               'preamble': ["\centering", "\label{tab:hi_surveys}"]},
+                               'preamble': ["\centering", "\small", "\label{tab:hi_surveys}"]},
                     formats={'rms': '5.2f', '$N_{HI}$': '5.1f', 'Beam size': '3.0f', 'Sky Coverage': '5.0f'}
                     )
