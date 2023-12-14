@@ -46,7 +46,8 @@ class Survey(object):
 
     def __init__(self, name, beam, chan_size, rms,
                  facility=None, sky_coverage=np.nan, target=None,
-                 redshifts=None, references = None):
+                 redshifts=None, references=None,
+                 ndets=np.nan):
         """
         Construct initial attributes for Observations object
 
@@ -63,6 +64,7 @@ class Survey(object):
         self.target = target
         self.redshifts = redshifts
         self.references = references
+        self.ndets = ndets
 
         # calculate NHI from provided inputs
         self.nhi = func.get_nhi(self.rms, self.chan_size, self.beam, self.beam)
@@ -130,7 +132,7 @@ class Survey_Collection(object):
                 # append to survey list
                 survey_rows.append((survey.name, survey.facility, survey.sky_coverage,
                                     survey.target, survey.beam,
-                                    survey.rms, survey.nhi, survey.redshifts,
+                                    survey.rms, survey.nhi, survey.redshifts, survey.ndets,
                                     survey.references))
 
 
@@ -141,7 +143,7 @@ class Survey_Collection(object):
         try:
             self.survey_table = QTable(rows=survey_rows,
                                        names=['survey', 'facility', 'coverage', 'targets',
-                                              'beam', 'rms', 'nhi', 'redshifts', 'references'])
+                                              'beam', 'rms', 'nhi', 'redshifts', 'ndets', 'references'])
         except:
             print("Could not make survey table table")
 
@@ -152,21 +154,24 @@ class Survey_Collection(object):
         Have this as a separate method so can customize and add inputs as needed
         """
         # and write the table out:
-        col_names = ['Survey', 'Facility', 'Sky Coverage', 'Targets', 'Beam size', 'rms', '$N_{HI}$', 'Redshift', 'Refs']
+        col_names = ['Survey', 'Facility', 'Area', 'Targets', 'Beam', 'rms', '$N_{HI}$',
+                     'Redshift', '$\mathrm{N_{dets}}$', 'Refs']
 
-        colalign = 'lllp{2.5cm}llll'
+        colalign = 'lllp{2cm}llllll'
         self.survey_table['nhi_1e18'] = self.survey_table['nhi'] / 1e18
 
-        tablefoot_text = r"\tablefoot{"
+        tablefoot_text = (r"\tablefoot{"
+                          + r" 1 Radio velocity definition, or $z=0$ for optical velocity "+
+                          "References: ")
         for key, value in zip(self.ref_dict.keys(), self.ref_dict.values()):
-            tablefoot_text += f"{key} : {value}, "
+            tablefoot_text += f"{key} {value}, "
         tablefoot_text += "}"
 
         if 'Hz' in self.common_spec_res.unit.to_string():
             self.common_spec_res = func.convert_chan_freq_vel(self.common_spec_res)
 
         ascii.write(self.survey_table['survey', 'facility', 'coverage', 'targets', 'beam', 'rms', 'nhi_1e18',
-                                      'redshifts', 'references'],
+                                      'redshifts', 'ndets', 'references'],
                     latex_table,
                     format='latex',
                     overwrite=True,
@@ -175,8 +180,10 @@ class Survey_Collection(object):
                     latexdict={'header_start': "\hline \hline",
                                'header_end': "\hline",
                                'data_end': "\hline",
-                               'caption': f"HI surveys at common spectral resolution {self.common_spec_res}",
+                               'caption': (f"HI surveys at common spectral resolution {self.common_spec_res}" +
+                                           r"$^{1}$"),
                                'tablefoot' : tablefoot_text,
                                'preamble': ["\centering", "\small", "\label{tab:hi_surveys}"]},
-                    formats={'rms': '5.2f', '$N_{HI}$': '5.1f', 'Beam size': '3.0f', 'Sky Coverage': '5.0f'}
+                    formats={'rms': '5.2f', '$N_{HI}$': '5.1f', 'Beam': '3.0f', 'Area': '5.0f',
+                             '$\mathrm{N_{dets}}$': '6.0f'}
                     )
