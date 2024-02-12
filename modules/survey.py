@@ -47,7 +47,7 @@ class Survey(object):
     def __init__(self, name, beam, chan_size, rms,
                  facility=None, sky_coverage=np.nan, target=None,
                  redshifts=None, references=None,
-                 ndets=np.nan, nhi_abs=None):
+                 ndets=np.nan):
         """
         Construct initial attributes for Observations object
 
@@ -65,14 +65,9 @@ class Survey(object):
         self.redshifts = redshifts
         self.references = references
         self.ndets = ndets
-        self.nhi_abs = nhi_abs
 
         # calculate NHI from provided inputs
         self.nhi = func.get_nhi(self.rms, self.chan_size, self.beam, self.beam)
-
-        if self.nhi_abs is not None:
-            self.nhi = self.nhi_abs
-            print(f'Using absorption value of {self.nhi_abs}')
 
     def change_spec_res(self, new_res):
         """
@@ -87,9 +82,6 @@ class Survey(object):
         # update nhi
         self.nhi = func.get_nhi(self.rms, self.chan_size, self.beam, self.beam)
 
-        if self.nhi_abs is not None:
-            self.nhi = self.nhi_abs
-            print(f'Using absorption value of {self.nhi_abs}')
 
 class Survey_Collection(object):
     """
@@ -155,26 +147,22 @@ class Survey_Collection(object):
         except:
             print("Could not make survey table table")
 
-    def write_latex_table(self, latex_table='surveys.tex', nhi_sig = 5):
+    def write_latex_table(self, latex_table='surveys.tex'):
         """
         Write out latex table to latex_table path
 
         Have this as a separate method so can customize and add inputs as needed
         """
         # and write the table out:
-        col_names = ['Survey', 'Facility', 'Area', 'Targets', 'Beam', 'rms', '$N_{HI}^{2}$',
+        col_names = ['Survey', 'Facility', 'Area', 'Targets', 'Beam', 'rms', '$N_{HI}$',
                      'Redshift', '$\mathrm{N_{dets}}$', 'Refs']
 
         colalign = 'lllp{2cm}llllll'
-        self.survey_table['nhi'] = nhi_sig * self.survey_table['nhi']
-        self.survey_table['nhi_1e19'] = self.survey_table['nhi'] / 1e19
+        self.survey_table['nhi_1e18'] = self.survey_table['nhi'] / 1e18
 
         tablefoot_text = (r"\tablefoot{"
-                          + r" 1: Radio velocity definition, or $z=0$ for optical velocity "
-                          + r" 2: "+ f"{nhi_sig}"+r"-$\sigma$ sensitivity "
-                          + f" over {self.common_spec_res} "
-                          + r"3: Absorption of 100 K gas "
-                          + "References: ")
+                          + r" 1 Radio velocity definition, or $z=0$ for optical velocity "+
+                          "References: ")
         for key, value in zip(self.ref_dict.keys(), self.ref_dict.values()):
             tablefoot_text += f"{key} {value}, "
         tablefoot_text += "}"
@@ -182,7 +170,7 @@ class Survey_Collection(object):
         if 'Hz' in self.common_spec_res.unit.to_string():
             self.common_spec_res = func.convert_chan_freq_vel(self.common_spec_res)
 
-        ascii.write(self.survey_table['survey', 'facility', 'coverage', 'targets', 'beam', 'rms', 'nhi_1e19',
+        ascii.write(self.survey_table['survey', 'facility', 'coverage', 'targets', 'beam', 'rms', 'nhi_1e18',
                                       'redshifts', 'ndets', 'references'],
                     latex_table,
                     format='latex',
@@ -196,6 +184,6 @@ class Survey_Collection(object):
                                            r"$^{1}$"),
                                'tablefoot' : tablefoot_text,
                                'preamble': ["\centering", "\small", "\label{tab:hi_surveys}"]},
-                    formats={'rms': '5.2f', '$N_{HI}^{2}$': '5.1f', 'Beam': '3.0f', 'Area': '5.0f',
+                    formats={'rms': '5.2f', '$N_{HI}$': '5.1f', 'Beam': '3.0f', 'Area': '5.0f',
                              '$\mathrm{N_{dets}}$': '6.0f'}
                     )
