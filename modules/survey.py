@@ -154,14 +154,15 @@ class Survey_Collection(object):
         Have this as a separate method so can customize and add inputs as needed
         """
         # and write the table out:
-        col_names = ['Survey', 'Facility', 'Area', 'Targets', 'Beam', 'rms', '$N_{HI}$',
+        col_names = ['Survey', 'Facility', 'Area', 'Targets', 'Beam', 'rms', '$N_{HI}^{2}$',
                      'Redshift', '$\mathrm{N_{dets}}$', 'Refs']
 
         colalign = 'lllp{2cm}llllll'
         self.survey_table['nhi_1e18'] = self.survey_table['nhi'] / 1e18
 
         tablefoot_text = (r"\tablefoot{"
-                          + r" 1 Radio velocity definition, or $z=0$ for optical velocity "+
+                          + r" 1: Radio velocity definition, or $z=0$ for optical velocity "+
+                            r"2: For emission; absorption depends on strength of continuum source and spin temperature " +
                           "References: ")
         for key, value in zip(self.ref_dict.keys(), self.ref_dict.values()):
             tablefoot_text += f"{key} {value}, "
@@ -184,6 +185,6 @@ class Survey_Collection(object):
                                            r"$^{1}$"),
                                'tablefoot' : tablefoot_text,
                                'preamble': ["\centering", "\small", "\label{tab:hi_surveys}"]},
-                    formats={'rms': '5.2f', '$N_{HI}$': '5.1f', 'Beam': '3.0f', 'Area': '5.0f',
+                    formats={'rms': '5.2f', '$N_{HI}^{2}$': '5.1f', 'Beam': '3.0f', 'Area': '5.0f',
                              '$\mathrm{N_{dets}}$': '6.0f'}
                     )
